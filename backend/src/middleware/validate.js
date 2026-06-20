@@ -12,12 +12,7 @@ function formatZodError(error) {
   return httpError(400, message);
 }
 
-/**
- * Builds a middleware that validates the given request parts against Zod
- * schemas, replacing each part with the parsed (and transformed) value.
- *
- *   validate({ body: reserveSchema, params: eventIdParamSchema })
- */
+
 export function validate(schemas) {
   return (req, res, next) => {
     try {

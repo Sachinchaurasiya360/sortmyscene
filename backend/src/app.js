@@ -6,11 +6,24 @@ import { errorHandler, notFound } from './middleware/errorHandler.js';
 export function createApp() {
   const app = express();
 
-  app.use(
-    cors({
-      origin: process.env.CLIENT_ORIGIN?.split(',') || '*',
-    })
-  );
+  // Auth is Bearer-token based (no cookies), so reflecting any origin is safe.
+  // Set CLIENT_ORIGIN (comma-separated) to lock it down to specific origins.
+  const allowlist = process.env.CLIENT_ORIGIN
+    ?.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  const corsOptions = {
+    // `true` reflects the request's Origin header (allows all); a list restricts it.
+    origin: allowlist && allowlist.length ? allowlist : true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  };
+
+  app.use(cors(corsOptions));
+  // Answer preflight requests for every route.
+  app.options('*', cors(corsOptions));
+
   app.use(express.json());
 
   // Health / service-info routes (also handy as the deployment root).

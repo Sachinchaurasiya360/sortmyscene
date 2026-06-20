@@ -3,15 +3,6 @@ import Reservation, { RESERVATION_STATUS } from '../models/Reservation.js';
 import { httpError } from '../middleware/errorHandler.js';
 import { releaseExpiredHolds } from '../services/seatService.js';
 
-/**
- * POST /api/bookings
- * body: { reservationId }
- *
- * Marks the reserved seats as booked and finalises the reservation. Booking is
- * only allowed for the reservation's owner, while it is still ACTIVE and not
- * past expiresAt. Each seat flip is guarded by `status: reserved` +
- * `reservationId`, so an expired/stolen seat can never be booked.
- */
 export async function createBooking(req, res) {
   const { reservationId } = req.body;
 
@@ -57,9 +48,7 @@ export async function createBooking(req, res) {
   }
 
   if (booked.length !== reservation.seatNumbers.length) {
-    // Lost the hold on at least one seat mid-flight. Roll back the ones we just
-    // booked in this call back to booked? No—revert them to available so we
-    // don't leave a partial booking, and surface the failure.
+    
     await Seat.updateMany(
       { eventId: reservation.eventId, seatNumber: { $in: booked }, status: SEAT_STATUS.BOOKED },
       { $set: { status: SEAT_STATUS.AVAILABLE, reservationId: null } }

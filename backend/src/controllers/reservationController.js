@@ -7,16 +7,6 @@ import { releaseExpiredHolds } from '../services/seatService.js';
 
 const RESERVATION_MINUTES = Number(process.env.RESERVATION_MINUTES || 10);
 
-/**
- * POST /api/reserve
- * body: { eventId, seatNumbers: [] }  (validated + de-duplicated by Zod)
- *
- * Double-booking prevention: each seat is flipped available -> reserved with a
- * single atomic findOneAndUpdate guarded by `status: available`. MongoDB
- * guarantees only one concurrent writer wins per document, so two users can
- * never reserve the same seat. If any seat in the batch is unavailable we roll
- * back the seats already grabbed in this request and return 409.
- */
 export async function reserveSeats(req, res) {
   const { eventId, seatNumbers } = req.body;
 
@@ -46,13 +36,11 @@ export async function reserveSeats(req, res) {
     );
 
     if (!updated) {
-      // Roll back everything we grabbed in this request, then report.
       await Seat.updateMany(
         { eventId, reservationId },
         { $set: { status: SEAT_STATUS.AVAILABLE, reservationId: null, reservedUntil: null } }
       );
 
-      // Distinguish "doesn't exist" from "already taken".
       const seatDoc = await Seat.findOne({ eventId, seatNumber }).select('status').lean();
       if (!seatDoc) {
         throw httpError(404, `Seat ${seatNumber} does not exist for this event`);

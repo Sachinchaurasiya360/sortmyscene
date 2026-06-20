@@ -5,6 +5,5 @@ export async function connectDB(uri) {
   await mongoose.connect(uri, {
     serverSelectionTimeoutMS: 8000,
   });
-  console.log(`MongoDB connected: ${mongoose.connection.host}/${mongoose.connection.name}`);
   return mongoose.connection;
 }
