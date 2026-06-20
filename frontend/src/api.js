@@ -8,7 +8,11 @@ export const tokenStore = {
   clear: () => localStorage.removeItem(TOKEN_KEY),
 };
 
-const api = axios.create({ baseURL: '/api' });
+// In dev, `/api` is proxied to the local backend by Vite (see vite.config.js).
+// In production builds, VITE_API_BASE_URL points at the deployed backend.
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+
+const api = axios.create({ baseURL });
 
 // Attach the bearer token to every request when present.
 api.interceptors.request.use((config) => {

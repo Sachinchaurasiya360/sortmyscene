@@ -52,6 +52,30 @@ is pre-filled).
 
 ---
 
+## Deployment (Vercel)
+
+**Backend** is deployed as a Vercel serverless function at
+`https://sortmyscene-three.vercel.app`.
+
+- Entry point: `backend/api/index.js` exports a default `(req, res)` handler (Vercel
+  requires a default function/server export, which is why pointing it straight at
+  `src/app.js` failed). It lazily connects to Mongo and caches the connection across warm
+  invocations.
+- `backend/vercel.json` routes every request to that function so Express handles all
+  paths.
+- In the Vercel project: set **Root Directory = `backend`** and add the env vars
+  (`MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `RESERVATION_MINUTES`). Leave
+  `CLIENT_ORIGIN` unset (or set it to the frontend's URL) so CORS allows the frontend;
+  auth is Bearer-token based, so a wildcard origin is safe.
+- Health checks: `GET /` and `GET /health` (plus `GET /api/health`).
+
+**Frontend** reads `VITE_API_BASE_URL` at build time:
+
+- `frontend/.env.production` points it at `https://sortmyscene-three.vercel.app/api`.
+- `frontend/.env.development` keeps it at `/api` so local dev uses the Vite proxy.
+
+---
+
 ## Different approaches I thought about (the booking-rush problem)
 
 This is basically the real question behind any ticketing app. What happens when a lot of
