@@ -7,15 +7,9 @@ export function createApp() {
   const app = express();
 
   // Auth is Bearer-token based (no cookies), so reflecting any origin is safe.
-  // Set CLIENT_ORIGIN (comma-separated) to lock it down to specific origins.
-  const allowlist = process.env.CLIENT_ORIGIN
-    ?.split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-
+  // `origin: true` reflects the request's Origin header, allowing all origins.
   const corsOptions = {
-    // `true` reflects the request's Origin header (allows all); a list restricts it.
-    origin: allowlist && allowlist.length ? allowlist : true,
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   };
